@@ -140,60 +140,77 @@
       .then(stream => { document.getElementById('player').srcObject = stream; })
       .catch(() => console.warn('No se accedió a la cámara'));
 
-    // Carga preguntas JSON
+    // drawLetters: dibuja o redibuja las letras afuera del rosco según tamaño
+    let lettersDrawn = [];
+    function drawLetters() {
+      // Limpia viejas letras
+      lettersDrawn.forEach(el => el.remove()); lettersDrawn = [];
+      const letters = Object.keys(questionsByLetter).sort();
+      const total = letters.length;
+      const vmin = Math.min(window.innerWidth, window.innerHeight) / 100;
+      const letterSize = 7 * vmin;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const radius = (rosco.clientWidth / 2) + (letterSize / 2) + (vmin * 1);
+
+      letters.forEach((L, i) => {
+        const angle = (i / total) * 2 * Math.PI - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle) - letterSize/2;
+        const y = centerY + radius * Math.sin(angle) - letterSize/2;
+        const d = document.createElement('div');
+        d.className = 'letter';
+        d.style.width = letterSize + 'px'; d.style.height = letterSize + 'px';
+        d.style.lineHeight = letterSize + 'px';
+        d.style.left = x + 'px'; d.style.top = y + 'px';
+        d.textContent = L; d.dataset.letter = L;
+        d.addEventListener('click', () => selectLetter(L,d));
+        game.appendChild(d); lettersDrawn.push(d);
+      });
+    }
+
+    // initGame: selecciona preguntas, dibuja letras y arranca timer
+    function initGame() {
+      Object.keys(questionsByLetter).forEach(L=>{
+        const arr = questionsByLetter[L];
+        selectedQuestions[L] = arr[Math.floor(Math.random()*arr.length)];
+      });
+      drawLetters();
+      startTimer();
+    }
+
+    // Resto de funciones: selectLetter, markLetter, startTimer, endGame
+    function selectLetter(L, div) {
+      if(div.classList.contains('correct')||div.classList.contains('wrong')||div.classList.contains('passed')) return;
+      currentLetter = L; questionText.textContent = selectedQuestions[L].Pregunta;
+      answerDiv.style.display='none';
+    }
+    btnShow.addEventListener('click',()=>{ if(!currentLetter) return; answerText.textContent = selectedQuestions[currentLetter].Respuesta; answerDiv.style.display='block'; });
+    btnPass.addEventListener('click',()=>markLetter('passed'));
+    btnCorrect.addEventListener('click',()=>markLetter('correct'));
+    btnWrong.addEventListener('click',()=>markLetter('wrong'));
+    btnStop.addEventListener('click',()=>clearInterval(timerInterval));
+    btnResume.addEventListener('click',()=>{ clearInterval(timerInterval); startTimer(); });
+    btnReset.addEventListener('click',()=>{ clearInterval(timerInterval); timeLeft=initialTime; timerEl.textContent=timeLeft; startTimer(); });
+    function markLetter(status){ if(!currentLetter) return; const div = document.querySelector(`.letter[data-letter="${currentLetter}"]`); div.classList.remove('correct','wrong','passed'); div.classList.add(status); if(status==='correct') score+=100; else if(status==='wrong') score-=20; scoreEl.textContent=score; currentLetter=null; questionText.textContent='Selecciona una letra para empezar'; answerDiv.style.display='none'; }
+    function startTimer(){ timerInterval = setInterval(()=>{ timeLeft--; timerEl.textContent=timeLeft; if(timeLeft<=0){ clearInterval(timerInterval); endGame(); } },1000); }
+    function endGame(){ alert(`¡Tiempo!\nCorrectas: ${score/100}\nIncorrectas: ${document.querySelectorAll('.letter.wrong').length}\nPasadas: ${document.querySelectorAll('.letter.passed').length}\nPuntuación: ${score}`); }
+
+    // listener para redibujar al cambiar tamaño o rotar pantalla
+    window.addEventListener('resize', () => {
+      drawLetters();
+    });
+
+    // Cargar preguntas y arrancar juego
     fetch('pasapalabra_questions.json')
-      .then(r => r.json()).then(data => {
-        data.forEach(item => {
+      .then(res=>res.json())
+      .then(data=>{
+        data.forEach(item=>{
           const L = item.Letra.toUpperCase();
           questionsByLetter[L] = questionsByLetter[L] || [];
           questionsByLetter[L].push(item);
         });
         initGame();
       });
-
-    function initGame() {
-      const letters = Object.keys(questionsByLetter).sort();
-      const total = letters.length;
-      const vmin = Math.min(window.innerWidth, window.innerHeight) / 100;
-      const letterSize = 7 * vmin;
-      // Calcular centro exacto del rosco (50vw, 50vh)
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      // Radio para colocar letras fuera del círculo
-      const radius = (rosco.clientWidth / 2) + (letterSize / 2) + (vmin * 1);
-
-      // Selección aleatoria
-      letters.forEach(L => {
-        const arr = questionsByLetter[L]; selectedQuestions[L] = arr[Math.floor(Math.random() * arr.length)];
-      });
-      // Dibujar letras alrededor
-      letters.forEach((L, i) => {
-        const angle = (i / total) * 2 * Math.PI - Math.PI / 2;
-        const x = centerX + radius * Math.cos(angle) - letterSize / 2;
-        const y = centerY + radius * Math.sin(angle) - letterSize / 2;
-        const d = document.createElement('div');
-        d.className = 'letter'; d.style.width = letterSize + 'px'; d.style.height = letterSize + 'px'; d.style.lineHeight = letterSize + 'px';
-        d.style.left = x + 'px'; d.style.top = y + 'px'; d.textContent = L; d.dataset.letter = L;
-        d.addEventListener('click', () => selectLetter(L, d)); game.appendChild(d);
-      });
-      startTimer();
-    }
-
-    function selectLetter(L, div) {
-      if (div.classList.contains('correct') || div.classList.contains('wrong') || div.classList.contains('passed')) return;
-      currentLetter = L; const q = selectedQuestions[L];
-      questionText.textContent = q.Pregunta; answerDiv.style.display = 'none';
-    }
-    btnShow.addEventListener('click', () => { if (!currentLetter) return; answerText.textContent = selectedQuestions[currentLetter].Respuesta; answerDiv.style.display = 'block'; });
-    btnPass.addEventListener('click', () => markLetter('passed'));
-    btnCorrect.addEventListener('click', () => markLetter('correct'));
-    btnWrong.addEventListener('click', () => markLetter('wrong'));
-    btnStop.addEventListener('click', () => clearInterval(timerInterval));
-    btnResume.addEventListener('click', () => { clearInterval(timerInterval); startTimer(); });
-    btnReset.addEventListener('click', () => { clearInterval(timerInterval); timeLeft = initialTime; timerEl.textContent = timeLeft; startTimer(); });
-    function markLetter(status) { if (!currentLetter) return; const div = document.querySelector(`.letter[data-letter="${currentLetter}"]`); div.classList.remove('correct','wrong','passed'); div.classList.add(status); if (status==='correct') score+=100; else if(status==='wrong') score-=20; scoreEl.textContent=score; currentLetter=null; questionText.textContent='Selecciona una letra para empezar'; answerDiv.style.display='none'; }
-    function startTimer() { timerInterval = setInterval(()=> { timeLeft--; timerEl.textContent=timeLeft; if(timeLeft<=0){ clearInterval(timerInterval); endGame(); } },1000); }
-    function endGame() { alert(`¡Tiempo!\nCorrectas: ${score/100}\nIncorrectas: ${document.querySelectorAll('.letter.wrong').length}\nPasadas: ${document.querySelectorAll('.letter.passed').length}\nPuntuación: ${score}`); }
   </script>
 </body>
 </html>
