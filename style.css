@@ -1,0 +1,49 @@
+
+body {
+  font-family: sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+#game {
+  max-width: 600px;
+  margin: 20px auto;
+  text-align: center;
+}
+#rosco {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #333;
+}
+.letter {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  border: 2px solid #333;
+  border-radius: 50%;
+  background: #eee;
+  cursor: pointer;
+  user-select: none;
+}
+.letter.correct {
+  background: #4CAF50;
+  color: #fff;
+}
+.letter.wrong {
+  background: #F44336;
+  color: #fff;
+}
+#question-panel {
+  margin-top: 20px;
+}
+#controls button {
+  margin: 5px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+}
