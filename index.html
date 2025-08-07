@@ -20,54 +20,58 @@
     #banner h2 { font-size:4vmin; margin-bottom:2vmin; }
     #banner p { font-size:2.5vmin; margin-bottom:4vmin; line-height:1.2; }
     #btn-start { background:#4CAF50; color:#fff; border:none;
-      padding:1vmin 3vmin; font-size:3vmin; border-radius:0.5vmin;
-      cursor:pointer;
+      padding:1vmin 3vmin; font-size:3vmin; border-radius:0.5vmin; cursor:pointer;
     }
     #btn-start:hover { opacity:0.8; }
     /* Juego oculto hasta inicio */
     #game { display:none; position:relative; width:100vw; height:100vh; }
-    #rosco { position:absolute; width:55vmin; height:55vmin;
-      top:50%; left:50%; transform:translate(-50%,-50%);
+    /* Ajuste rosco y cámara: más pequeño y hacia arriba */
+    #rosco {
+      position:absolute;
+      width:50vmin; height:50vmin;
+      top:40%; left:50%; transform:translate(-50%,-50%);
       border-radius:50%; overflow:hidden; border:4px solid #fff;
       z-index:2; background:rgba(0,0,0,0.2);
     }
     #rosco video { position:absolute; top:0; left:0; width:100%; height:100%;
-      object-fit:cover; z-index:1; transform:scaleX(-1);
-      transform-origin:center;
+      object-fit:cover; z-index:1; transform:scaleX(-1); transform-origin:center;
     }
-    .letter { position:absolute; width:7vmin; height:7vmin;
-      line-height:7vmin; border:3px solid #fff; border-radius:50%;
-      background:rgba(34,34,34,0.8); color:#fff; text-align:center;
-      cursor:pointer; user-select:none; font-weight:700; font-size:4vmin;
-      z-index:3;
+    .letter { position:absolute; width:7vmin; height:7vmin; line-height:7vmin;
+      border:3px solid #fff; border-radius:50%; background:rgba(34,34,34,0.8);
+      color:#fff; text-align:center; cursor:pointer; user-select:none;
+      font-weight:700; font-size:4vmin; z-index:3;
     }
     .letter.correct { background:#4CAF50; }
     .letter.wrong { background:#F44336; }
     .letter.passed { background:#FF9800; }
-    #timer-container, #score-container { position:absolute;
-      padding:1vmin 2vmin; background:#0055ff; border-radius:0.5vmin;
-      z-index:3; font-size:2.5vmin; color:#fff; font-weight:600;
+    /* Cronómetro y puntuación estilo */
+    #timer-container { position:absolute; width:12vmin; height:12vmin;
+      border-radius:50%; background: radial-gradient(circle at 30% 30%, #ffb74d, #f57c00);
+      display:flex; align-items:center; justify-content:center;
+      z-index:4; font-size:4vmin; color:#fff; font-weight:bold;
     }
-    #timer-container { top:2vmin; right:2vmin; }
-    #score-container { top:2vmin; left:2vmin; }
-    #question-panel { position:absolute; top:2vmin; left:50%;
-      transform:translateX(-50%); width:85%; max-width:90vmin;
+    #score-container { position:absolute; width:12vmin; height:7vmin;
+      border-radius:1vmin; background: radial-gradient(circle at 30% 30%, #ffb74d, #f57c00);
+      display:flex; align-items:center; justify-content:center;
+      z-index:4; font-size:4vmin; color:#fff; font-weight:bold;
+    }
+    /* Panel de preguntas, bajo el rosco */
+    #question-panel {
+      position:absolute;
+      top:calc(40% + 25vmin + 15vmin);
+      left:50%; transform:translateX(-50%);
+      width:85%; max-width:90vmin;
       background:rgba(255,255,255,0.9); padding:1vmin 2vmin;
       border-radius:1vmin; z-index:3; box-shadow:0 0 10px rgba(0,0,0,0.5);
     }
-    #question-text { font-size:clamp(2vmin,3vw,3vmin);
-      color:#000; text-align:center; margin:0;
+    #question-text { font-size:clamp(2vmin,3vw,3vmin); color:#000; text-align:center; margin:0; }
+    #answer { display:none; font-size:4vmin; margin-top:1vmin; color:#333; text-align:center; }
+    /* Controles inferiores */
+    #controls { position:absolute; bottom:2vmin; left:50%; transform:translateX(-50%);
+      display:flex; gap:1vmin; z-index:3;
     }
-    #answer { display:none; font-size:4vmin; margin-top:1vmin;
-      color:#333; text-align:center;
-    }
-    #controls { position:absolute; bottom:2vmin; left:50%;
-      transform:translateX(-50%); display:flex; gap:1vmin;
-      z-index:3;
-    }
-    #controls button { display:flex; align-items:center;
-      justify-content:center; padding:1vmin 1.5vmin;
-      font-size:2vmin; cursor:pointer; border:none;
+    #controls button { display:flex; align-items:center; justify-content:center;
+      padding:1vmin 1.5vmin; font-size:2vmin; cursor:pointer; border:none;
       border-radius:0.5vmin; color:#fff; font-weight:600;
     }
     #btn-switch-camera, #btn-stop, #btn-resume, #btn-reset { background:#888; }
@@ -89,8 +93,8 @@
   </div>
   <div id="game">
     <div id="rosco"><video id="player" autoplay muted playsinline></video></div>
-    <div id="timer-container">Tiempo: <span id="timer">120</span>s</div>
-    <div id="score-container">Puntuación: <span id="score">0</span></div>
+    <div id="timer-container">120</div>
+    <div id="score-container">0</div>
     <div id="question-panel">
       <div id="question-text">Selecciona una letra para empezar</div>
       <div id="answer">Respuesta: <span id="answer-text"></span></div>
@@ -125,19 +129,18 @@
     const btnStop = document.getElementById('btn-stop');
     const btnResume = document.getElementById('btn-resume');
     const btnReset = document.getElementById('btn-reset');
-    const timerEl = document.getElementById('timer');
-    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer-container');
+    const scoreEl = document.getElementById('score-container');
     let questionsByLetter = {}, selectedQuestions = {}, currentLetter = null;
 
-    // Iniciar cámara
     function startCamera() {
       if (window.stream) window.stream.getTracks().forEach(t => t.stop());
       navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: false })
         .then(stream => { window.stream = stream; document.getElementById('player').srcObject = stream; })
         .catch(err => console.warn('Cámara no disponible', err));
     }
+    btnSwitch.addEventListener('click', () => { facingMode = (facingMode === 'user' ? 'environment' : 'user'); startCamera(); });
 
-    // Dibujo rosco
     let lettersDrawn = [];
     function drawLetters() {
       lettersDrawn.forEach(el => el.remove()); lettersDrawn = [];
@@ -148,8 +151,7 @@
       const rect = rosco.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-      const radius = rect.width / 2 + letterSize / 2 + (vmin * 2);
-
+      const radius = rect.width / 2 + letterSize / 2 + (vmin * 3);
       letters.forEach((L, i) => {
         const angle = (i / total) * 2 * Math.PI - Math.PI / 2;
         const x = centerX + radius * Math.cos(angle) - letterSize / 2;
@@ -157,12 +159,10 @@
         const d = document.createElement('div'); d.className = 'letter';
         d.style.width = letterSize + 'px'; d.style.height = letterSize + 'px'; d.style.lineHeight = letterSize + 'px';
         d.style.left = x + 'px'; d.style.top = y + 'px'; d.textContent = L; d.dataset.letter = L;
-        d.addEventListener('click', () => selectLetter(L, d)); game.appendChild(d);
-        lettersDrawn.push(d);
+        d.addEventListener('click', () => selectLetter(L, d)); game.appendChild(d); lettersDrawn.push(d);
       });
     }
 
-    // Inicio juego
     function initGame() {
       Object.keys(questionsByLetter).forEach(L => {
         const arr = questionsByLetter[L]; selectedQuestions[L] = arr[Math.floor(Math.random() * arr.length)];
@@ -170,21 +170,38 @@
       drawLetters(); startTimer();
     }
 
-    // Mostrar respuesta
+    function selectLetter(L, div) {
+      if (!div || div.classList.contains('correct') || div.classList.contains('wrong') || div.classList.contains('passed')) return;
+      currentLetter = L; questionText.style.display = 'block'; questionText.textContent = selectedQuestions[L].Pregunta; answerDiv.style.display = 'none';
+    }
     btnShow.addEventListener('click', () => {
-      if (!currentLetter) return;
-      questionText.style.display = 'none';
-      answerText.textContent = selectedQuestions[currentLetter].Respuesta;
-      answerDiv.style.display = 'block';
+      if (!currentLetter) return; questionText.style.display = 'none'; answerText.textContent = selectedQuestions[currentLetter].Respuesta; answerDiv.style.display = 'block';
     });
+    btnPass.addEventListener('click', () => markLetter('passed'));
+    btnCorrect.addEventListener('click', () => markLetter('correct'));
+    btnWrong.addEventListener('click', () => markLetter('wrong'));
 
-    // Botón inicio
-    btnStart.addEventListener('click', () => {
-      banner.style.display = 'none'; game.style.display = 'block';
-      startCamera(); initGame();
-    });
+    function markLetter(status) {
+      if (!currentLetter) return; const div = document.querySelector(`.letter[data-letter=\"${currentLetter}\"]`);
+      div.classList.remove('correct', 'wrong', 'passed'); div.classList.add(status);
+      if (status === 'correct') score += 100; else if (status === 'wrong') score -= 20;
+      scoreEl.textContent = score; currentLetter = null;
+      questionText.style.display = 'block'; questionText.textContent = 'Selecciona una letra para empezar'; answerDiv.style.display = 'none';
+    }
 
-    // Carga preguntas
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--; timerEl.textContent = timeLeft;
+        if (timeLeft <= 0) { clearInterval(timerInterval); endGame(); }
+      }, 1000);
+    }
+    btnStop.addEventListener('click', () => clearInterval(timerInterval));
+    btnResume.addEventListener('click', () => { clearInterval(timerInterval); startTimer(); });
+    btnReset.addEventListener('click', () => { clearInterval(timerInterval); timeLeft = initialTime; timerEl.textContent = timeLeft; startTimer(); });
+    function endGame() {
+      alert(`¡Tiempo!\nCorrectas: ${score/100}\nIncorrectas: ${document.querySelectorAll('.letter.wrong').length}\nPasadas: ${document.querySelectorAll('.letter.passed').length}\nPuntuación: ${score}`);
+    }
+
     fetch('pasapalabra_questions.json')
       .then(res => res.json())
       .then(data => {
@@ -193,9 +210,37 @@
           questionsByLetter[L] = questionsByLetter[L] || [];
           questionsByLetter[L].push(item);
         });
+      });
+
+    btnStart.addEventListener('click', () => {
+      banner.style.display = 'none';
+      game.style.display = 'block';
+      startCamera();
+      initGame();
+      const divA = document.querySelector('.letter[data-letter="A"]');
+      if (divA) selectLetter('A', divA);
+      positionIndicators();
     });
 
-    window.addEventListener('resize', () => drawLetters());
+    function positionIndicators() {
+      const qp = document.getElementById('question-panel').getBoundingClientRect();
+      const timer = document.getElementById('timer-container');
+      const score = document.getElementById('score-container');
+      const vmin = Math.min(window.innerWidth, window.innerHeight) / 100;
+      const margin = vmin;
+      // Colocar timer centrado verticalmente en el panel
+      const timerTop = qp.top + qp.height / 2 - timer.offsetHeight / 2;
+      timer.style.top = `${timerTop}px`;
+      // Puntuación justo debajo del timer con margen
+      const scoreTop = timerTop + timer.offsetHeight + margin;
+      score.style.top = `${scoreTop}px`;
+      // Ambos pegados a la izquierda del panel de preguntas
+      const leftPos = qp.left - timer.offsetWidth - margin;
+      timer.style.left = `${leftPos}px`;
+      score.style.left = `${leftPos}px`;
+    }
+
+    window.addEventListener('resize', () => { drawLetters(); positionIndicators(); });('resize', () => { drawLetters(); positionIndicators(); });
   </script>
 </body>
 </html>
